@@ -1,10 +1,48 @@
-// login_screen.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:untitled22/screens/register_screen.dart';
 import 'package:untitled22/screens/selection_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  // Fungsi untuk login menggunakan Firebase
+  Future<void> _login() async {
+    try {
+      // Melakukan login dengan email dan password
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      // Jika login berhasil, pindahkan ke halaman selection
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SelectionScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      String message = "Terjadi kesalahan";
+
+      // Menangani error Firebase Auth
+      if (e.code == 'user-not-found') {
+        message = 'Pengguna tidak ditemukan';
+      } else if (e.code == 'wrong-password') {
+        message = 'Password salah';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,15 +96,20 @@ class LoginScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
+                    // Email Field
                     TextField(
+                      controller: _emailController,
                       decoration: InputDecoration(
-                        hintText: 'Username',
+                        hintText: 'Email',
                         border: InputBorder.none,
                         hintStyle: TextStyle(color: Colors.grey[600]),
                       ),
+                      keyboardType: TextInputType.emailAddress,
                     ),
                     const Divider(height: 16, color: Colors.transparent),
+                    // Password Field
                     TextField(
+                      controller: _passwordController,
                       obscureText: true,
                       decoration: InputDecoration(
                         hintText: 'Password',
@@ -79,13 +122,7 @@ class LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20), // Jarak antara teks dan tombol
               ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SelectionScreen()),
-
-                  );
-                },
+                onPressed: _login, // Panggil fungsi _login saat tombol ditekan
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.lightBlue, // Warna latar tombol
                   shape: RoundedRectangleBorder(
@@ -94,7 +131,7 @@ class LoginScreen extends StatelessWidget {
                   minimumSize: const Size(150, 50), // Ukuran tombol
                 ),
                 child: const Text(
-                  'Kirim',
+                  'Login',
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
